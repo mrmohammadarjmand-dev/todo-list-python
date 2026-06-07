@@ -1,48 +1,64 @@
+import tkinter as tk
+from tkinter import messagebox
+
+FILE_NAME = "tasks.txt"
+
 tasks = []
 
-while True:
-    print("\n=== TO-DO LIST ===")
-    print("1. Add task")
-    print("2. Show tasks")
-    print("3. Remove task")
-    print("4. Exit")
+# load from file
+def load_tasks():
+    try:
+        with open(FILE_NAME, "r", encoding="utf-8") as f:
+            return [line.strip() for line in f.readlines()]
+    except FileNotFoundError:
+        return []
 
-    choice = input("Choose an option: ")
+# save to file
+def save_tasks():
+    with open(FILE_NAME, "w", encoding="utf-8") as f:
+        for task in tasks:
+            f.write(task + "\n")
 
-    if choice == "1":
-        task = input("Enter a task: ")
+def update_list():
+    listbox.delete(0, tk.END)
+    for task in tasks:
+        listbox.insert(tk.END, task)
+
+def add_task():
+    task = entry.get().strip()
+    if task:
         tasks.append(task)
-        print("Task added successfully!")
-
-    elif choice == "2":
-        if not tasks:
-            print("No tasks found.")
-        else:
-            print("\nYour Tasks:")
-            for i, task in enumerate(tasks, start=1):
-                print(f"{i}. {task}")
-
-    elif choice == "3":
-        if not tasks:
-            print("No tasks to remove.")
-        else:
-            print("\nYour Tasks:")
-            for i, task in enumerate(tasks, start=1):
-                print(f"{i}. {task}")
-
-            try:
-                task_number = int(input("Enter task number to remove: "))
-                if 1 <= task_number <= len(tasks):
-                    removed_task = tasks.pop(task_number - 1)
-                    print(f"Removed: {removed_task}")
-                else:
-                    print("Invalid task number.")
-            except ValueError:
-                print("Please enter a valid number.")
-
-    elif choice == "4":
-        print("Goodbye!")
-        break
-
+        save_tasks()
+        update_list()
+        entry.delete(0, tk.END)
     else:
-        print("Invalid option. Try again.")
+        messagebox.showwarning("Warning", "Write something first!")
+
+def delete_task():
+    try:
+        selected = listbox.curselection()[0]
+        tasks.pop(selected)
+        save_tasks()
+        update_list()
+    except IndexError:
+        messagebox.showwarning("Warning", "Select a task!")
+
+# window
+window = tk.Tk()
+window.title("To-Do List Pro")
+window.geometry("350x450")
+
+tasks = load_tasks()
+
+entry = tk.Entry(window, width=30)
+entry.pack(pady=10)
+
+tk.Button(window, text="Add Task", command=add_task).pack()
+tk.Button(window, text="Delete Task", command=delete_task).pack()
+
+listbox = tk.Listbox(window, width=40, height=18)
+listbox.pack(pady=10)
+
+update_list()
+
+window.mainloop()
